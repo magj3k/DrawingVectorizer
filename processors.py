@@ -35,7 +35,7 @@ class PictureVectorizer(object):
                 return i
         return 1
 
-    def trace_cluster(self, offsets, starting_pixel, cluster_pixels_img, min_dist_threshold=3.85, close_trace_threshold=2.25, debug_prefix="0"): # returns list of pixels in cluster contour
+    def trace_cluster(self, offsets, starting_pixel, cluster_pixels_img, min_dist_threshold=3.85, close_trace_threshold=2.0, debug_prefix="0"): # returns list of pixels in cluster contour
         contour_pixels = [starting_pixel]
 
         debug_img = np.zeros(cluster_pixels_img.shape)
@@ -150,14 +150,7 @@ class PictureVectorizer(object):
 
             if num_new_heads == 0:
 
-                # tracing finished, close shape if within distance threshold
-                dist = np.linalg.norm(np.array(current_pixel) - np.array(current_head[0]))
-                if dist < close_trace_threshold:
-
-                    # traverse back to origin
-                    contour_pixels = self.traverse_to_point(contour_pixels, current_head[0], min_dist_threshold=min_dist_threshold, force_traverse=True)
-                elif len(heads) > 0:
-
+                if len(heads) > 0:
                     # trace back to common ancestor of next head
                     for j in range(len(heads[0])):
                         i = len(heads[0])-j-1
@@ -168,12 +161,21 @@ class PictureVectorizer(object):
                         if heads[0][i] in current_head:
                             break
                 else:
-                    # walks back through head to origin
-                    for j in range(len(current_head)):
-                        i = len(current_head)-j-1
 
-                        # traverse
-                        contour_pixels = self.traverse_to_point(contour_pixels, current_head[i], min_dist_threshold=min_dist_threshold)
+                    # tracing finished, close shape if within distance threshold
+                    dist = np.linalg.norm(np.array(current_pixel) - np.array(current_head[0]))
+                    if dist < close_trace_threshold:
+
+                        # traverse back to origin
+                        contour_pixels = self.traverse_to_point(contour_pixels, current_head[0], min_dist_threshold=min_dist_threshold, force_traverse=True)
+                    else:
+
+                        # walks back through head to origin
+                        for j in range(len(current_head)):
+                            i = len(current_head)-j-1
+
+                            # traverse
+                            contour_pixels = self.traverse_to_point(contour_pixels, current_head[i], min_dist_threshold=min_dist_threshold)
             # try:
             #     cluster_pixels_img_copy = np.copy(cluster_pixels_img)
             #     cluster_pixels_img_copy[0, current_pixel[0], current_pixel[1]] = 1.0
